@@ -3,88 +3,97 @@
  * Module dependencies.
  */
 
-import { default as isValidItin, mask } from '../src';
 import should from 'should';
+import { isValid, mask } from '../src';
 
 /**
- * ITIN sample numbers.
+ * `Individual Taxpayer Identification Number` samples.
  */
 
-const invalidNumbers = [
-  '00070000',
-  '10070000',
-  '20070000',
-  '30070000',
-  '40070000',
-  '50070000',
-  '60070000',
-  '70070000',
-  '80070000',
-  '90000000',
-  '90010000',
-  '90020000',
-  '90030000',
-  '90040000',
-  '90050000',
-  '90060000',
-  '90089000',
-  '90089000',
-  '90093000'
-];
-const validNumbers = [
-  '900700000',
-  '900709999',
-  '999709999',
-  '900880000',
-  '900889999',
-  '999889999',
-  '900900000',
-  '900909999',
-  '999909999',
-  '900920000',
-  '900929999',
-  '999929999',
-  '900940000',
-  '900949999',
-  '999949999',
-  '900990000',
-  '900999999',
-  '999999999'
-];
+const numbers = {
+  invalid: ['00070000', '100_70_000', '20070000f', '300#70#000'],
+  valid: {
+    format: ['900-70-0000', '900 70 9999', '999-70 9999', '900 88 0000'],
+    soft: ['9-0-0    70 0000', '90 0 7 0 9999', '99  --9-70 999 9', '- 900 88 0000 -'],
+    strict: ['900700000', '900709999', '999709999', '900880000']
+  }
+};
 
 /**
- * Test.
+ * Test `itin-validator`.
  */
 
-describe('isValidItin', () => {
-  describe('default()', () => {
-    it('should return `false` if itin is invalid', () => {
-      for (const itin of invalidNumbers) {
-        isValidItin(itin).should.be.false();
+describe('ItinValidator', () => {
+  describe('isValid()', () => {
+    it('should return false if number is invalid', () => {
+      for (let i = 0; i < numbers.invalid.length; i++) {
+        isValid(numbers.invalid[i], { strict: 'format' }).should.be.false();
+        isValid(numbers.invalid[i], { strict: false }).should.be.false();
+        isValid(numbers.invalid[i], { strict: true }).should.be.false();
       }
     });
 
-    it('should return `true` if itin is valid', () => {
-      for (const itin of validNumbers) {
-        isValidItin(itin).should.be.true();
+    it('should return true for strict and formatted numbers if strict is format', () => {
+      const invalid = [].concat(numbers.invalid, numbers.valid.soft);
+      const valid = [].concat(numbers.valid.format, numbers.valid.strict);
+
+      for (let i = 0; i < invalid.length; i++) {
+        isValid(invalid[i], { strict: 'format' }).should.be.false();
       }
+
+      for (let i = 0; i < valid.length; i++) {
+        isValid(valid[i], { strict: 'format' }).should.be.true();
+      }
+    });
+
+    it('should return true for all valid numbers if strict is false', () => {
+      const valid = [].concat(numbers.valid.format, numbers.valid.soft, numbers.valid.strict);
+
+      for (let i = 0; i < numbers.invalid.length; i++) {
+        isValid(numbers.invalid[i], { strict: false }).should.be.false();
+      }
+
+      for (let i = 0; i < valid.length; i++) {
+        isValid(valid[i], { strict: false }).should.be.true();
+      }
+    });
+
+    it('should return true only for strict numbers if strict is true', () => {
+      const invalid = [].concat(numbers.invalid, numbers.valid.format, numbers.valid.soft);
+      const valid = numbers.valid.strict;
+
+      for (let i = 0; i < invalid.length; i++) {
+        isValid(invalid[i], { strict: true }).should.be.false();
+      }
+
+      for (let i = 0; i < valid.length; i++) {
+        isValid(valid[i], { strict: true }).should.be.true();
+      }
+    });
+
+    it('should be `strict` by default', () => {
+      isValid(numbers.valid.format[0]).should.be.false();
+      isValid(numbers.valid.soft[0]).should.be.false();
+      isValid(numbers.valid.strict[0]).should.be.true();
     });
   });
 
   describe('mask()', () => {
-    it('should mask a valid itin', () => {
-      mask('900709999').should.equal('XXXXX9999');
-    });
-
-    it('should throw an error if itin is invalid', () => {
+    it('should throw an error if value is invalid', () => {
       try {
-        mask('00070000');
+        mask(numbers.invalid[0]);
 
         should.fail();
       } catch (e) {
         e.should.be.instanceOf(Error);
         e.message.should.equal('Invalid Individual Taxpayer Identification Number');
       }
+    });
+
+    it('should mask a valid value', () => {
+      mask(numbers.valid.format[0], { strict: 'format' }).should.equal('XXX-XX-0000');
+      mask(numbers.valid.soft[0], { strict: false }).should.equal('X-X-X    XX 0000');
+      mask(numbers.valid.strict[0], { strict: true }).should.equal('XXXXX0000');
     });
   });
 });
