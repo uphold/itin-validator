@@ -1,44 +1,94 @@
-# Individual Taxpayer Identification Numbers (ITIN)
+# itin-validator
+Validate and mask a U.S. Individual Taxpayer Identification Number (ITIN).
 
-[![npm version][npm-image]][npm-url]
-[![build status][travis-image]][travis-url]
-
-This modules allows you to check if a number is a valid.
+## Status
+[![npm version][npm-image]][npm-url] [![build status][travis-image]][travis-url]
 
 ## Installation
+Install the package via `npm`:
 
-Choose your preferred method:
-
-* npm: `npm install --save is-valid-itin`
-* Download: [is-valid-itin](https://github.com/seegno/is-valid-itin)
+```sh
+npm install itin-validator --save
+```
 
 ## Usage
+### `isValid(value)`
+This method validates if the given value is a valid `Individual Taxpayer Identification Number`.
 
-*NOTE:* The input number **must not** be formatted to `xxx-xx-xxxx`.
+#### Arguments
+1. `value` _(*)_: The value to validate.
 
-> Check if number is valid.
+#### Returns
+_(boolean)_:  Returns whether the input value is a valid ITIN or not.
 
-```js
-import isValidItin from 'is-valid-itin';
-
-isValidItin('xxxxxxxxx');
-```
-
-> Mask the number.
+#### Example
 
 ```js
-import { mask } from 'is-valid-itin';
+isValid({});
+// => false
 
-mask('xxxxxxxxx');
+isValid('9-0-0700000');
+// => false
+
+isValid('900-70-0000');
+// => true
+
+isValid('900700000');
+// => true
 ```
 
-## Running tests
+--------------------------------------------------------------------------------
+
+### `mask(value)`
+This method will help you protect this sensitive piece of information by obfuscating some digits.
+
+#### Arguments
+1. `value` _(*)_: The value to mask.
+
+#### Returns
+_(string)_: Returns the masked value by replacing value certain digits by 'X'.
+
+#### Example
+
+```js
+mask({});
+// Throws an Error.
+
+mask('9-0-0700000');
+// Throws an Error.
+
+mask('900-70-0000');
+// => XXX-XX-0000
+
+mask('900700000');
+// => XXXXX0000
+```
+
+--------------------------------------------------------------------------------
+
+## Tests
+To test using a local installation of `node.js`:
 
 ```sh
 npm test
 ```
 
-[npm-image]: https://img.shields.io/npm/v/is-valid-itin.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/is-valid-itin
-[travis-image]: https://img.shields.io/travis/seegno/is-valid-itin.svg?style=flat-square
-[travis-url]: https://travis-ci.org/seegno/is-valid-itin
+To test using Docker exclusively:
+
+```sh
+docker-compose run --rm sut
+```
+
+## Release
+
+```sh
+npm version [<newversion> | major | minor | patch] -m "Release %s"
+```
+
+## License
+MIT
+
+[npm-image]: https://img.shields.io/npm/v/itin-validator.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/itin-validator
+[travis-image]: https://img.shields.io/travis/seegno/itin-validator.svg?style=flat-square
+[travis-url]: https://img.shields.io/travis/seegno/itin-validator.svg?style=flat-square
